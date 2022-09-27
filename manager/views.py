@@ -17,7 +17,6 @@ class AccountUserViewSet(viewsets.ModelViewSet):
         # new role = created role
         # old props
         # new props
-        #dfshdfiwsfe
 
 
 
