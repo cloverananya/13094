@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.db import models
 from django.contrib.auth.models import User
 from core.models import Account, Role, Property
@@ -16,6 +18,10 @@ class AccountUser(models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None, skip_role=False):
         super(AccountUser, self).save(force_insert, force_update, using, update_fields)
 
+        # old_props = self.properties.all()
+        # print(old_props)
+        # globals(old_props)
+
         save_again = False
 
         if self.role is not None and skip_role is False:
@@ -27,31 +33,36 @@ class AccountUser(models.Model):
     def log_role_change(
             self,
             source: str,
-            type_of_change="PermissionLog.ROLE_CHANGED",
+            type_of_change: str,
             old_role: Role = None,
             new_role: Role = None,
     ) -> None:
+        if old_role != new_role:
 
-        PermissionLog.objects.create(
-            account_user=self,
-            type=type_of_change,
-            source=source,
-            old_role=old_role,
-            new_role=new_role
-        )
+            PermissionLog.objects.create(
+                account_user=self,
+                type=type_of_change,
+                source=source,
+                old_role=old_role,
+                new_role=new_role
+            )
 
-    def log_property_change(self, source, type_of_change, old_props=None, new_props=None):
-        log = PermissionLog.objects.create(
-            account_user=self,
-            type=type_of_change,
-            source=source,
-        )
+    def log_property_change(
+            self,
+            source: str,
+            type_of_change: str,
+            old_props: Union[list, set] = None,
+            new_props: Union[list, set] = None
+    ) -> None:
+        if old_props != new_props:
+            log = PermissionLog.objects.create(
+                account_user=self,
+                type=type_of_change,
+                source=source,
+            )
 
-        if old_props:
-            log.deleted_properties.set(old_props)
-
-        if new_props:
             log.added_properties.set(new_props)
+            log.deleted_properties.set(old_props)
 
 
 class PermissionLog(models.Model):
